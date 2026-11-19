@@ -1,0 +1,2 @@
+Infinity-link 4ef1bcb4750271fc5ad38c8afb200b94b6cd3f92 (github.com/tekchansin/Infinity-link) — include/, src/, LICENSE as they are there
++ EndpointInfo::address and Endpoint::port() (listen on 127.0.0.1, a free port) — in Infinity-link too, not committed there yet (2026-11-19)
