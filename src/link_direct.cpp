@@ -23,6 +23,7 @@
 #endif
 #include <winsock2.h>
 #include <windows.h>
+#include <shellapi.h>  // CommandLineToArgvW
 #include <objbase.h>
 
 #include <signal.h>
@@ -603,6 +604,19 @@ void printCaps(const Caps& k) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    // argv in UTF-8 whatever the PC's code page: Windows hands main() its arguments in the ANSI one, so a Polish
+    // "Słuchawki (…)" came as cp1250, matched no device name (UTF-8 from Windows) and the share never ran (2026-11-21);
+    // the name it is shown under ("PC · device") lost its "·" in code pages without one
+    std::vector<std::string> u8;
+    std::vector<char*> u8v;
+    int wc = 0;
+    if (LPWSTR* w = CommandLineToArgvW(GetCommandLineW(), &wc)) {
+        for (int i = 0; i < wc; i++) u8.push_back(utf8(w[i]));
+        LocalFree(w);
+        for (auto& a : u8) u8v.push_back(a.data());
+        argc = (int)u8v.size();
+        argv = u8v.data();
+    }
     std::string driverArg, name, volume = "fixed";
     int port = -1, bufferMs = 0;
     bool list = false, local = false, panel = false, anyAddress = false;
@@ -700,9 +714,10 @@ int main(int argc, char** argv) {
     }
 
     const bool soft = volume == "software";
-    char host[MAX_COMPUTERNAME_LENGTH + 1] = "windows";
-    DWORD hl = sizeof host;
-    GetComputerNameA(host, &hl);
+    wchar_t hw[MAX_COMPUTERNAME_LENGTH + 1] = L"windows";
+    DWORD hl = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameW(hw, &hl);
+    const std::string host = utf8(hw);  // a computer name of another script too (UTF-8, like the device's)
     EndpointInfo info;
     std::string idTail;
     for (char c : pick->name) if (isalnum((unsigned char)c)) idTail += (char)tolower((unsigned char)c);
