@@ -20,3 +20,6 @@ add_executable(Infinity-Link-Direct src/link_direct.cpp)
 target_include_directories(Infinity-Link-Direct PRIVATE third_party/asiosdk/common)
 target_link_libraries(Infinity-Link-Direct infinitylink ole32 uuid advapi32 user32)
 target_compile_options(Infinity-Link-Direct PRIVATE -Wall -Wextra -Wno-unused-parameter)
+# no console window: Infinity Core's Run key starts it at sign-in, and a console program opened a window per shared
+# device that stayed until closed (tester 2026-11-23, Infinity-Link-Windows alike)
+target_link_options(Infinity-Link-Direct PRIVATE -mwindows)
